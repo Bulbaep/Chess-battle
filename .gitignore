@@ -1,0 +1,5 @@
+# Config 
+config.py 
+game_state.json 
+logs.json 
+__pycache__/ 
