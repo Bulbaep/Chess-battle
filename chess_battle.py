@@ -15,7 +15,7 @@ import time
 import sys
 import threading
 from datetime import datetime, timedelta
-from config import *
+from config_railway import *
 import json
 import os
 from http.server import HTTPServer, SimpleHTTPRequestHandler
@@ -1057,8 +1057,9 @@ def start_http_server():
         # Change working directory to serve local files
         os.chdir(os.path.dirname(os.path.abspath(__file__)) or '.')
         
-        server = HTTPServer(('localhost', 8000), SimpleHTTPRequestHandler)
-        print("🌐 Web server started on http://localhost:8000/viewer.html")
+        port = int(os.environ.get('PORT', 8000))
+server = HTTPServer(('0.0.0.0', port), SimpleHTTPRequestHandler)
+        print(f"🌐 Web server started on port {port}")
         server.serve_forever()
     except Exception as e:
         print(f"⚠️  HTTP server error: {e}")
