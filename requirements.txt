@@ -2,3 +2,4 @@ anthropic==0.40.0
 openai==1.59.5
 requests==2.32.3
 python-chess==1.999
+berserk==0.13.2
