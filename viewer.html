@@ -56,6 +56,7 @@
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 0 20px rgba(255, 106, 0, 0.3);
+            transition: border-color 0.3s;
         }
         
         .terminal-header {
@@ -408,7 +409,7 @@
                     <div class="terminal-dot dot-red"></div>
                     <div class="terminal-dot dot-yellow"></div>
                     <div class="terminal-dot dot-green"></div>
-                    <div class="terminal-title">📟 LIVE TERMINAL</div>
+                    <div class="terminal-title">📟 LIVE TERMINAL (Auto-refresh: 2s)</div>
                 </div>
                 <div class="terminal-body" id="terminal">
                     <div class="log-line log-info">🚀 Terminal initialized...</div>
@@ -536,9 +537,16 @@
             return 'info';
         }
         
-        // Load logs from logs.json
+        // Load logs from logs.json with NO CACHE
         function loadLogs() {
-            fetch('logs.json?' + new Date().getTime())
+            fetch('logs.json?' + new Date().getTime(), {
+                cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
+            })
                 .then(response => response.json())
                 .then(data => {
                     if (data.logs && data.logs.length > lastLogCount) {
@@ -555,8 +563,15 @@
                         
                         lastLogCount = data.logs.length;
                         
-                        // Auto-scroll to bottom
+                        // Auto-scroll to bottom with smooth animation
                         terminal.scrollTop = terminal.scrollHeight;
+                        
+                        // Visual feedback: flash the terminal border green when updated
+                        var terminalContainer = document.querySelector('.terminal-container');
+                        terminalContainer.style.borderColor = '#00ff00';
+                        setTimeout(function() {
+                            terminalContainer.style.borderColor = '#ff6a00';
+                        }, 200);
                     }
                 })
                 .catch(error => {
@@ -564,9 +579,16 @@
                 });
         }
         
-        // Load and update from game_state.json
+        // Load and update from game_state.json with NO CACHE
         function loadGameState() {
-            fetch('game_state.json?' + new Date().getTime())
+            fetch('game_state.json?' + new Date().getTime(), {
+                cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
+            })
                 .then(response => response.json())
                 .then(data => {
                     // Update board
@@ -654,8 +676,8 @@
                 });
         }
         
-        // Update every 1 second (faster for terminal)
-        setInterval(loadLogs, 1000);
+        // Update every 2 seconds (as requested)
+        setInterval(loadLogs, 2000);
         setInterval(loadGameState, 2000);
         
         // Initial load
