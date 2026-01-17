@@ -24,4 +24,4 @@ CLAUDE_MODEL = "claude-sonnet-4-20250514"
 GPT_MODEL = "gpt-4o-mini"
 
 # Nombre maximum de tentatives pour un coup invalide
-MAX_RETRIES = 10
+MAX_RETRIES = 30

@@ -362,6 +362,10 @@ def ask_claude_move(board_fen, color, invalid_moves=[]):
     smart_moves = get_smart_moves(board_temp)
     smart_moves_str = ", ".join([m.uci() for m in smart_moves])
     
+    # ALL LEGAL MOVES (complete list)
+    all_legal_moves = list(board_temp.legal_moves)
+    all_legal_moves_str = ", ".join([m.uci() for m in all_legal_moves])
+    
     # History
     move_stack = list(board_temp.move_stack)
     last_moves = " ".join([m.uci() for m in move_stack[-4:]]) if len(move_stack) > 0 else "Game start"
@@ -395,7 +399,10 @@ White: {white_score} points | Black: {black_score} points
 📋 LAST MOVES: {last_moves}
 
 🎲 RECOMMENDED MOVES:
-{smart_moves_str}{invalid_warning}
+{smart_moves_str}
+
+⚔️ ALL LEGAL MOVES (you MUST choose from this list):
+{all_legal_moves_str}{invalid_warning}
 
 🏆 MISSION: WIN THE GAME!
 
@@ -465,6 +472,10 @@ def ask_gpt_move(board_fen, color, invalid_moves=[]):
     smart_moves = get_smart_moves(board_temp)
     smart_moves_str = ", ".join([m.uci() for m in smart_moves])
     
+    # ALL LEGAL MOVES (complete list)
+    all_legal_moves = list(board_temp.legal_moves)
+    all_legal_moves_str = ", ".join([m.uci() for m in all_legal_moves])
+    
     # History
     move_stack = list(board_temp.move_stack)
     last_moves = " ".join([m.uci() for m in move_stack[-4:]]) if len(move_stack) > 0 else "Game start"
@@ -498,7 +509,10 @@ White: {white_score} points | Black: {black_score} points
 📋 LAST MOVES: {last_moves}
 
 🎲 RECOMMENDED MOVES:
-{smart_moves_str}{invalid_warning}
+{smart_moves_str}
+
+⚔️ ALL LEGAL MOVES (you MUST choose from this list):
+{all_legal_moves_str}{invalid_warning}
 
 🏆 MISSION: WIN THE GAME!
 
