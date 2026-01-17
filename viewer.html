@@ -537,7 +537,7 @@
             return 'info';
         }
         
-        // Load logs from logs.json with NO CACHE
+        // Load logs from logs.json with NO CACHE - FIXED VERSION
         function loadLogs() {
             fetch('logs.json?' + new Date().getTime(), {
                 cache: 'no-store',
@@ -549,9 +549,17 @@
             })
                 .then(response => response.json())
                 .then(data => {
+                    var terminal = document.getElementById('terminal');
+                    
+                    // FIXED: Detect if logs.json was reset (new game started)
+                    if (data.logs && data.logs.length < lastLogCount) {
+                        // Logs were reset - clear terminal and restart
+                        terminal.innerHTML = '';
+                        lastLogCount = 0;
+                        console.log('🔄 Logs reset detected - clearing terminal');
+                    }
+                    
                     if (data.logs && data.logs.length > lastLogCount) {
-                        var terminal = document.getElementById('terminal');
-                        
                         // Add only new logs
                         for (var i = lastLogCount; i < data.logs.length; i++) {
                             var logLine = document.createElement('div');
