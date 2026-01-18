@@ -56,6 +56,13 @@ def custom_print(*args, **kwargs):
 # Replace built-in print
 print = custom_print
 
+# Initialize logs.json file immediately (before any print)
+try:
+    with open('logs.json', 'w') as f:
+        json.dump({"logs": []}, f)
+except:
+    pass
+
 # === INITIALIZATION ===
 print("🎮 Initializing AI Battle...")
 
@@ -235,6 +242,27 @@ scores = {
     "total": 0
 }
 start_time = datetime.now()
+
+# Initialize game_state.json file immediately
+try:
+    initial_state = {
+        "current_game_url": "https://lichess.org",
+        "game_in_progress": False,
+        "game_number": 0,
+        "scores": scores,
+        "elapsed_time": "0h 0min",
+        "last_move": "-",
+        "moves": "",
+        "ai_thoughts": {
+            "claude": {"thought": "Waiting for game...", "material": 0, "threats": 0},
+            "gpt": {"thought": "Waiting for game...", "material": 0, "threats": 0}
+        },
+        "last_update": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+    with open('game_state.json', 'w', encoding='utf-8') as f:
+        json.dump(initial_state, f, indent=2, ensure_ascii=False)
+except:
+    pass
 
 # === AI FUNCTIONS ===
 
