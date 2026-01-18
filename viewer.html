@@ -377,6 +377,36 @@
             color: #fff;
         }
         
+        /* Audio Control Button */
+        .audio-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ff6a00 0%, #ff4500 100%);
+            border: 2px solid #ff6a00;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(255, 106, 0, 0.4);
+            transition: all 0.3s;
+            z-index: 9999;
+        }
+        
+        .audio-control:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255, 106, 0, 0.6);
+        }
+        
+        .audio-control.muted {
+            background: linear-gradient(135deg, #666666 0%, #444444 100%);
+            border-color: #666666;
+        }
+        
         /* Responsive */
         @media (max-width: 1400px) {
             .main-content {
@@ -507,6 +537,16 @@
                 </div>
             </div>
         </div>
+    </div>
+    
+    <!-- Audio Player -->
+    <audio id="background-music" loop>
+        <source src="Cyber-Tac_-_2077.mp3" type="audio/mpeg">
+    </audio>
+    
+    <!-- Audio Control Button -->
+    <div class="audio-control" id="audio-toggle" title="Toggle Music">
+        🔇
     </div>
     
     <script>
@@ -691,6 +731,27 @@
         // Initial load
         loadLogs();
         loadGameState();
+        
+        // === AUDIO CONTROL ===
+        var audioElement = document.getElementById('background-music');
+        var audioToggle = document.getElementById('audio-toggle');
+        var isMuted = true; // Start muted (browsers block autoplay)
+        
+        // Toggle audio on button click
+        audioToggle.addEventListener('click', function() {
+            if (isMuted) {
+                audioElement.play();
+                audioElement.volume = 0.3; // 30% volume for background music
+                audioToggle.textContent = '🔊';
+                audioToggle.classList.remove('muted');
+                isMuted = false;
+            } else {
+                audioElement.pause();
+                audioToggle.textContent = '🔇';
+                audioToggle.classList.add('muted');
+                isMuted = true;
+            }
+        });
     </script>
 </body>
 </html>
