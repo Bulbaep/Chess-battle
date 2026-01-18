@@ -43,6 +43,47 @@
             font-weight: bold;
         }
         
+        /* Solana Contract Banner - Minimalist */
+        .contract-banner {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            border: 2px solid #ff6a00;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 0 auto 20px auto;
+            max-width: 900px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(255, 106, 0, 0.3);
+        }
+        
+        .contract-banner:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 106, 0, 0.5);
+            border-color: #ffaa00;
+        }
+        
+        .contract-address {
+            color: #ffffff;
+            font-size: 1.3em;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            text-decoration: underline;
+            letter-spacing: 1px;
+            user-select: all;
+            word-break: break-all;
+        }
+        
+        .contract-banner.copied {
+            background: linear-gradient(135deg, #00ff00 0%, #00aa00 100%);
+            border-color: #00ff00;
+        }
+        
+        .contract-banner.copied .contract-address {
+            color: #000000;
+            text-decoration: none;
+        }
+        
         .main-content {
             display: grid;
             grid-template-columns: 400px 1fr 350px;
@@ -432,6 +473,11 @@
     <div class="container">
         <h1>🔥 AI CHESS BATTLE - Claude vs GPT 🔥</h1>
         
+        <!-- Solana Contract Banner - Minimalist -->
+        <div class="contract-banner" id="contract-banner" onclick="copyContract()">
+            <div class="contract-address" id="contract-address">YOUR_CONTRACT_HERE</div>
+        </div>
+        
         <div class="main-content">
             <!-- TERMINAL (LEFT) -->
             <div class="terminal-container">
@@ -553,6 +599,7 @@
         var board = null;
         var game = new Chess();
         var lastLogCount = 0;
+        var lastLog = ''; // Track the last log we've seen
         
         // Initialize chessboard
         var config = {
@@ -591,25 +638,67 @@
                 .then(data => {
                     var terminal = document.getElementById('terminal');
                     
+                    if (!data.logs || data.logs.length === 0) {
+                        return; // No logs yet
+                    }
+                    
+                    // Get the current last log
+                    var currentLastLog = data.logs[data.logs.length - 1];
+                    
                     // FIXED: Detect if logs.json was reset (new game started)
-                    if (data.logs && data.logs.length < lastLogCount) {
+                    if (data.logs.length < lastLogCount) {
                         // Logs were reset - clear terminal and restart
                         terminal.innerHTML = '';
                         lastLogCount = 0;
+                        lastLog = '';
                         console.log('🔄 Logs reset detected - clearing terminal');
                     }
                     
-                    if (data.logs && data.logs.length > lastLogCount) {
-                        // Add only new logs
-                        for (var i = lastLogCount; i < data.logs.length; i++) {
-                            var logLine = document.createElement('div');
-                            var logType = parseLogType(data.logs[i]);
-                            logLine.className = 'log-line log-' + logType;
-                            logLine.textContent = data.logs[i];
-                            terminal.appendChild(logLine);
+                    // Check if we have new content (either more logs OR different last log)
+                    var hasNewContent = (data.logs.length > lastLogCount) || (currentLastLog !== lastLog);
+                    
+                    if (hasNewContent) {
+                        // If length increased, add only new logs
+                        if (data.logs.length > lastLogCount) {
+                            for (var i = lastLogCount; i < data.logs.length; i++) {
+                                var logLine = document.createElement('div');
+                                var logType = parseLogType(data.logs[i]);
+                                logLine.className = 'log-line log-' + logType;
+                                logLine.textContent = data.logs[i];
+                                terminal.appendChild(logLine);
+                            }
+                        } else {
+                            // Length is same but content changed (logs rolled over)
+                            // Find where the content diverges and add from there
+                            var divergeIndex = -1;
+                            var terminalLines = terminal.querySelectorAll('.log-line');
+                            
+                            for (var i = 0; i < data.logs.length; i++) {
+                                if (i >= terminalLines.length || terminalLines[i].textContent !== data.logs[i]) {
+                                    divergeIndex = i;
+                                    break;
+                                }
+                            }
+                            
+                            if (divergeIndex >= 0) {
+                                // Remove old lines from divergence point
+                                while (terminal.children.length > divergeIndex) {
+                                    terminal.removeChild(terminal.lastChild);
+                                }
+                                
+                                // Add new lines from divergence point
+                                for (var i = divergeIndex; i < data.logs.length; i++) {
+                                    var logLine = document.createElement('div');
+                                    var logType = parseLogType(data.logs[i]);
+                                    logLine.className = 'log-line log-' + logType;
+                                    logLine.textContent = data.logs[i];
+                                    terminal.appendChild(logLine);
+                                }
+                            }
                         }
                         
                         lastLogCount = data.logs.length;
+                        lastLog = currentLastLog;
                         
                         // Auto-scroll to bottom with smooth animation
                         terminal.scrollTop = terminal.scrollHeight;
@@ -752,6 +841,30 @@
                 isMuted = true;
             }
         });
+        
+        // === SOLANA CONTRACT COPY ===
+        function copyContract() {
+            var contractAddress = document.getElementById('contract-address').textContent;
+            
+            // Don't copy placeholder text
+            if (contractAddress === 'YOUR_CONTRACT_HERE') {
+                return;
+            }
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(contractAddress).then(function() {
+                // Visual feedback - flash green
+                var banner = document.getElementById('contract-banner');
+                banner.classList.add('copied');
+                
+                // Reset after 1 second
+                setTimeout(function() {
+                    banner.classList.remove('copied');
+                }, 1000);
+            }).catch(function(err) {
+                console.error('Failed to copy:', err);
+            });
+        }
     </script>
 </body>
 </html>
