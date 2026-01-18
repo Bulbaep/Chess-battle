@@ -452,36 +452,64 @@ STRATEGY (in priority order):
 - Moving attacked pieces to another attacked square
 - Leaving your king in danger
 
-📝 RESPONSE FORMAT (IMPORTANT):
-Line 1: Brief thought (max 6 words, describe your plan IN ENGLISH)
-Line 2: Your move in UCI format (ex: e2e4)
+📝 RESPONSE FORMAT - STRICTLY FOLLOW THIS:
+Line 1: Your thought in EXACTLY 3-6 words only
+Line 2: Your move in UCI format (4 characters: e2e4)
 
-Example:
-Protecting attacked knight
-g1f3
+CORRECT examples:
+Attacking queen with knight
+b1c3
 
-Now play!"""
+Defending the rook
+a1b1
+
+WRONG examples (DO NOT DO THIS):
+Looking at this position, I see...  ← TOO LONG!
+I need to find the best move  ← NO MOVE PROVIDED!
+
+Now play - remember: SHORT thought + UCI move!"""
 
     try:
         message = anthropic_client.messages.create(
             model=CLAUDE_MODEL,
-            max_tokens=80,  # Increased for thought + move
+            max_tokens=150,  # Increased to handle verbosity
             temperature=0.3,  # Lower temperature for more solid play
             messages=[{"role": "user", "content": prompt}]
         )
         response_text = message.content[0].text.strip()
         
-        # Parse: line 1 = thought, line 2 = move
+        # Parse: look for UCI move in any line (more robust parsing)
         lines = response_text.split('\n')
-        if len(lines) >= 2:
-            thought = lines[0].strip()
-            move = lines[1].strip()
-        else:
-            # Fallback if format not respected
-            thought = "Analyzing position"
-            move = response_text.strip()
+        thought = None
+        move = None
         
-        print(f"💭 Claude thinks: '{thought}'")
+        # Try to find thought and move
+        for i, line in enumerate(lines):
+            line = line.strip()
+            # Look for UCI move (4 chars like e2e4, or 5 with promotion like e7e8q)
+            if len(line) >= 4 and len(line) <= 5 and line[0:2].isalpha() and line[2:4].isdigit():
+                move = line
+                # Get thought from previous line if available
+                if i > 0:
+                    thought = lines[i-1].strip()
+                break
+        
+        # Fallback: try to find move pattern anywhere in response
+        if not move:
+            import re
+            uci_pattern = r'\b([a-h][1-8][a-h][1-8][qrbn]?)\b'
+            match = re.search(uci_pattern, response_text.lower())
+            if match:
+                move = match.group(1)
+        
+        if not thought:
+            thought = "Analyzing position"
+        
+        if move:
+            print(f"💭 Claude thinks: '{thought[:50]}'")  # Truncate long thoughts
+        else:
+            print(f"⚠️ Claude response parsing failed: {response_text[:100]}")
+        
         return move, thought
     except Exception as e:
         print(f"❌ Claude API error: {e}")
@@ -570,52 +598,64 @@ STRATEGY (in priority order):
 - Moving attacked pieces to another attacked square
 - Leaving your king in danger
 
-📝 RESPONSE FORMAT (IMPORTANT):
-Line 1: Brief thought (max 6 words, describe your plan IN ENGLISH)
-Line 2: Your move in UCI format (ex: e2e4)
+📝 RESPONSE FORMAT - STRICTLY FOLLOW THIS:
+Line 1: Your thought in EXACTLY 3-6 words only
+Line 2: Your move in UCI format (4 characters: e2e4)
 
-Example:
-Developing pieces to center
+CORRECT examples:
+Developing center pawn
 e7e5
 
-Now play!"""
+Capturing enemy piece  
+d8d4
+
+WRONG examples (DO NOT DO THIS):
+Looking at this position, I see...  ← TOO LONG!
+I need to find the best move  ← NO MOVE PROVIDED!
+
+Now play - remember: SHORT thought + UCI move!"""
 
     try:
         response = openai_client.chat.completions.create(
             model=GPT_MODEL,
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=50,  # Increased for thought + move
+            max_tokens=150,  # Increased to handle verbosity
             temperature=0.3  # Lower temperature for more solid play
         )
         response_text = response.choices[0].message.content.strip()
         
-        # Parse: line 1 = thought, line 2 = move
+        # Parse: look for UCI move in any line (more robust parsing)
         lines = response_text.split('\n')
-        if len(lines) >= 2:
-            thought = lines[0].strip()
-            move = lines[1].strip()
-        else:
-            # Fallback if format not respected
+        thought = None
+        move = None
+        
+        # Try to find thought and move
+        for i, line in enumerate(lines):
+            line = line.strip()
+            # Look for UCI move (4 chars like e2e4, or 5 with promotion like e7e8q)
+            if len(line) >= 4 and len(line) <= 5 and line[0:2].isalpha() and line[2:4].isdigit():
+                move = line
+                # Get thought from previous line if available
+                if i > 0:
+                    thought = lines[i-1].strip()
+                break
+        
+        # Fallback: try to find move pattern anywhere in response
+        if not move:
+            import re
+            uci_pattern = r'\b([a-h][1-8][a-h][1-8][qrbn]?)\b'
+            match = re.search(uci_pattern, response_text.lower())
+            if match:
+                move = match.group(1)
+        
+        if not thought:
             thought = "Analyzing position"
-            move = response_text.strip()
         
-        print(f"💭 GPT thinks: '{thought}'")
-        return move, thought
-    except Exception as e:
-        print(f"❌ GPT API error: {e}")
-        return None, None
-        
-        # Parse: line 1 = thought, line 2 = move
-        lines = response_text.split('\n')
-        if len(lines) >= 2:
-            thought = lines[0].strip()
-            move = lines[1].strip()
+        if move:
+            print(f"💭 GPT thinks: '{thought[:50]}'")  # Truncate long thoughts
         else:
-            # Fallback if format not respected
-            thought = "Analyzing position"
-            move = response_text.strip()
+            print(f"⚠️ GPT response parsing failed: {response_text[:100]}")
         
-        print(f"💭 GPT thinks: '{thought}'")
         return move, thought
     except Exception as e:
         print(f"❌ GPT API error: {e}")
@@ -807,6 +847,10 @@ def play_game(game_number):
                     
                     invalid_moves = []  # Store invalid moves
                     claude_thought = "Analyzing position"  # Default thought
+                    
+                    # Wait a bit to ensure Lichess is ready
+                    time.sleep(0.5)
+                    
                     for attempt in range(MAX_RETRIES):
                         result = ask_claude_move(board.fen(), 'white', invalid_moves)
                         
@@ -820,9 +864,14 @@ def play_game(game_number):
                                     print(f"✅ Claude plays: {move.uci()}")
                                     save_game_state(last_move=f"Claude: {move.uci()}", claude_thought=claude_thought)
                                     time.sleep(3)  # Pause to allow viewers to see the move
-                                    break
+                                    break  # Exit retry loop on success
                                 except Exception as e:
+                                    error_msg = str(e)
                                     print(f"❌ Error sending move: {e}")
+                                    # If "not your turn", break immediately - don't retry
+                                    if "Not your turn" in error_msg or "not your turn" in error_msg:
+                                        print("⚠️  Skipping - waiting for next gameState event")
+                                        break
                                     time.sleep(1)
                             else:
                                 print(f"⚠️  Invalid move (attempt {attempt+1}/{MAX_RETRIES}): {move_str}")
@@ -898,12 +947,16 @@ def play_game(game_number):
                         return 'draw'
                 
                 # Whose turn is it?
-                if board.turn == chess.WHITE:
+                if board.turn == chess.WHITE and status == 'started':
                     # Claude's turn
                     print(f"\n♟️  Move {move_number} | Claude's turn (white)...")
                     
                     invalid_moves = []  # Store invalid moves
                     claude_thought = "Analyzing position"  # Default thought
+                    
+                    # Wait a bit to ensure Lichess is ready
+                    time.sleep(0.5)
+                    
                     for attempt in range(MAX_RETRIES):
                         # Pass invalid moves to function
                         result = ask_claude_move(board.fen(), 'white', invalid_moves)
@@ -918,9 +971,14 @@ def play_game(game_number):
                                     print(f"✅ Claude plays: {move.uci()}")
                                     save_game_state(last_move=f"Claude: {move.uci()}", claude_thought=claude_thought)
                                     time.sleep(3)  # Pause to allow viewers to see the move
-                                    break
+                                    break  # Exit retry loop on success
                                 except Exception as e:
+                                    error_msg = str(e)
                                     print(f"❌ Error sending move: {e}")
+                                    # If "not your turn", break immediately - don't retry
+                                    if "Not your turn" in error_msg or "not your turn" in error_msg:
+                                        print("⚠️  Skipping - waiting for next gameState event")
+                                        break
                                     time.sleep(1)
                             else:
                                 print(f"⚠️  Invalid move (attempt {attempt+1}/{MAX_RETRIES}): {move_str}")
@@ -937,12 +995,16 @@ def play_game(game_number):
                         
                         time.sleep(1)
                     
-                else:
+                elif board.turn == chess.BLACK and status == 'started':
                     # GPT's turn
                     print(f"♟️  Move {move_number} | GPT's turn (black)...")
                     
                     invalid_moves = []  # Store invalid moves
                     gpt_thought = "Analyzing position"  # Default thought
+                    
+                    # Wait a bit to ensure Lichess is ready
+                    time.sleep(0.5)
+                    
                     for attempt in range(MAX_RETRIES):
                         # Pass invalid moves to function
                         result = ask_gpt_move(board.fen(), 'black', invalid_moves)
@@ -958,9 +1020,14 @@ def play_game(game_number):
                                     save_game_state(last_move=f"GPT: {move.uci()}", gpt_thought=gpt_thought)
                                     move_number += 1
                                     time.sleep(3)  # Pause to allow viewers to see the move
-                                    break
+                                    break  # Exit retry loop on success
                                 except Exception as e:
+                                    error_msg = str(e)
                                     print(f"❌ Error sending move: {e}")
+                                    # If "not your turn", break immediately - don't retry
+                                    if "Not your turn" in error_msg or "not your turn" in error_msg:
+                                        print("⚠️  Skipping - waiting for next gameState event")
+                                        break
                                     time.sleep(1)
                             else:
                                 print(f"⚠️  Invalid move (attempt {attempt+1}/{MAX_RETRIES}): {move_str}")
