@@ -434,15 +434,23 @@ White: {white_score} points | Black: {black_score} points
 
 🏆 MISSION: WIN THE GAME!
 
-STRATEGY (in order):
-1. If CHECKMATE possible → Do it immediately!
-2. If one of YOUR pieces is attacked → Save it or capture in exchange!
-3. If you can CAPTURE opponent's material → Take it!
-4. Otherwise → Develop pieces, control center, threaten
+⚠️ CRITICAL ANTI-BLUNDER RULES (check BEFORE every move):
+1. NEVER leave your pieces undefended - always verify they're protected!
+2. ALWAYS check if opponent can capture your pieces after your move!
+3. NEVER sacrifice material without equal or better compensation!
+4. If one of YOUR pieces is attacked → Save it FIRST (move it or defend it)!
+5. Don't move into checks or create hanging pieces!
 
-⛔ FORBIDDEN:
-- Losing material for free
-- Repeating the same move stupidly
+STRATEGY (in priority order):
+1. If CHECKMATE possible → Do it immediately!
+2. If YOUR pieces are attacked → SAVE THEM (move or defend)!
+3. If you can CAPTURE opponent's material → Take it!
+4. Otherwise → Develop pieces, control center, castle early
+
+⛔ ABSOLUTELY FORBIDDEN:
+- Losing pieces for free (hanging pieces)
+- Moving attacked pieces to another attacked square
+- Leaving your king in danger
 
 📝 RESPONSE FORMAT (IMPORTANT):
 Line 1: Brief thought (max 6 words, describe your plan IN ENGLISH)
@@ -458,7 +466,7 @@ Now play!"""
         message = anthropic_client.messages.create(
             model=CLAUDE_MODEL,
             max_tokens=80,  # Increased for thought + move
-            temperature=1.0,
+            temperature=0.3,  # Lower temperature for more solid play
             messages=[{"role": "user", "content": prompt}]
         )
         response_text = message.content[0].text.strip()
@@ -544,15 +552,23 @@ White: {white_score} points | Black: {black_score} points
 
 🏆 MISSION: WIN THE GAME!
 
-STRATEGY (in order):
-1. If CHECKMATE possible → Do it immediately!
-2. If one of YOUR pieces is attacked → Save it or capture in exchange!
-3. If you can CAPTURE opponent's material → Take it!
-4. Otherwise → Develop pieces, control center, threaten
+⚠️ CRITICAL ANTI-BLUNDER RULES (check BEFORE every move):
+1. NEVER leave your pieces undefended - always verify they're protected!
+2. ALWAYS check if opponent can capture your pieces after your move!
+3. NEVER sacrifice material without equal or better compensation!
+4. If one of YOUR pieces is attacked → Save it FIRST (move it or defend it)!
+5. Don't move into checks or create hanging pieces!
 
-⛔ FORBIDDEN:
-- Losing material for free
-- Repeating the same move stupidly
+STRATEGY (in priority order):
+1. If CHECKMATE possible → Do it immediately!
+2. If YOUR pieces are attacked → SAVE THEM (move or defend)!
+3. If you can CAPTURE opponent's material → Take it!
+4. Otherwise → Develop pieces, control center, castle early
+
+⛔ ABSOLUTELY FORBIDDEN:
+- Losing pieces for free (hanging pieces)
+- Moving attacked pieces to another attacked square
+- Leaving your king in danger
 
 📝 RESPONSE FORMAT (IMPORTANT):
 Line 1: Brief thought (max 6 words, describe your plan IN ENGLISH)
@@ -569,7 +585,7 @@ Now play!"""
             model=GPT_MODEL,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=50,  # Increased for thought + move
-            temperature=1.0
+            temperature=0.3  # Lower temperature for more solid play
         )
         response_text = response.choices[0].message.content.strip()
         
