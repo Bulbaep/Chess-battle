@@ -441,14 +441,26 @@ White: {white_score} points | Black: {black_score} points
 4. If one of YOUR pieces is attacked → Save it FIRST (move it or defend it)!
 5. Don't move into checks or create hanging pieces!
 
+🚨 SPECIAL RULES FOR KING AND QUEEN:
+1. KING: NEVER move your King in the opening (first 10 moves)! Keep it safe behind pawns!
+2. KING: Castle early (O-O or O-O-O) to protect your King!
+3. QUEEN: Your Queen is worth 9 points - PROTECT IT AT ALL COSTS!
+4. QUEEN: If your Queen is attacked → MOVE IT IMMEDIATELY!
+5. QUEEN: Don't bring Queen out too early - she's vulnerable to attacks!
+6. QUEEN: NEVER sacrifice your Queen unless it's checkmate!
+
 STRATEGY (in priority order):
 1. If CHECKMATE possible → Do it immediately!
-2. If YOUR pieces are attacked → SAVE THEM (move or defend)!
-3. If you can CAPTURE opponent's material → Take it!
-4. Otherwise → Develop pieces, control center, castle early
+2. If YOUR QUEEN is attacked → SAVE HER FIRST!
+3. If YOUR pieces are attacked → SAVE THEM (move or defend)!
+4. If you can CAPTURE opponent's material → Take it!
+5. Castle early to protect your King!
+6. Otherwise → Develop pieces, control center
 
 ⛔ ABSOLUTELY FORBIDDEN:
-- Losing pieces for free (hanging pieces)
+- Moving your King in the opening without castling
+- Losing your Queen for free or for less than a Queen
+- Leaving pieces undefended (hanging pieces)
 - Moving attacked pieces to another attacked square
 - Leaving your king in danger
 
@@ -472,8 +484,8 @@ Now play - remember: SHORT thought + UCI move!"""
     try:
         message = anthropic_client.messages.create(
             model=CLAUDE_MODEL,
-            max_tokens=150,  # Increased to handle verbosity
-            temperature=0.3,  # Lower temperature for more solid play
+            max_tokens=80,  # Reduced to avoid timeouts
+            temperature=0.6,  # Balanced: not too random, not too slow
             messages=[{"role": "user", "content": prompt}]
         )
         response_text = message.content[0].text.strip()
@@ -587,14 +599,26 @@ White: {white_score} points | Black: {black_score} points
 4. If one of YOUR pieces is attacked → Save it FIRST (move it or defend it)!
 5. Don't move into checks or create hanging pieces!
 
+🚨 SPECIAL RULES FOR KING AND QUEEN:
+1. KING: NEVER move your King in the opening (first 10 moves)! Keep it safe behind pawns!
+2. KING: Castle early (O-O or O-O-O) to protect your King!
+3. QUEEN: Your Queen is worth 9 points - PROTECT IT AT ALL COSTS!
+4. QUEEN: If your Queen is attacked → MOVE IT IMMEDIATELY!
+5. QUEEN: Don't bring Queen out too early - she's vulnerable to attacks!
+6. QUEEN: NEVER sacrifice your Queen unless it's checkmate!
+
 STRATEGY (in priority order):
 1. If CHECKMATE possible → Do it immediately!
-2. If YOUR pieces are attacked → SAVE THEM (move or defend)!
-3. If you can CAPTURE opponent's material → Take it!
-4. Otherwise → Develop pieces, control center, castle early
+2. If YOUR QUEEN is attacked → SAVE HER FIRST!
+3. If YOUR pieces are attacked → SAVE THEM (move or defend)!
+4. If you can CAPTURE opponent's material → Take it!
+5. Castle early to protect your King!
+6. Otherwise → Develop pieces, control center
 
 ⛔ ABSOLUTELY FORBIDDEN:
-- Losing pieces for free (hanging pieces)
+- Moving your King in the opening without castling
+- Losing your Queen for free or for less than a Queen
+- Leaving pieces undefended (hanging pieces)
 - Moving attacked pieces to another attacked square
 - Leaving your king in danger
 
@@ -619,8 +643,8 @@ Now play - remember: SHORT thought + UCI move!"""
         response = openai_client.chat.completions.create(
             model=GPT_MODEL,
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=150,  # Increased to handle verbosity
-            temperature=0.3  # Lower temperature for more solid play
+            max_tokens=80,  # Reduced to avoid timeouts
+            temperature=0.6  # Balanced: not too random, not too slow
         )
         response_text = response.choices[0].message.content.strip()
         
