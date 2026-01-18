@@ -20,7 +20,7 @@ TIME_CONTROL = {
 }
 
 # Modèles IA à utiliser
-CLAUDE_MODEL = "claude-sonnet-4-20250514"
+CLAUDE_MODEL = "claude-haiku-4-20250514"  # Haiku 4 - 4x moins cher que Sonnet
 GPT_MODEL = "gpt-4o-mini"
 
 # Nombre maximum de tentatives pour un coup invalide
