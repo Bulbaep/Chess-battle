@@ -490,23 +490,32 @@ Now play - remember: SHORT thought + UCI move!"""
         )
         response_text = message.content[0].text.strip()
         
-        # Parse: look for UCI move in any line (more robust parsing)
-        lines = response_text.split('\n')
+        # Parse: look for UCI move and extract thought
+        lines = [line.strip() for line in response_text.split('\n') if line.strip()]
         thought = None
         move = None
         
-        # Try to find thought and move
-        for i, line in enumerate(lines):
-            line = line.strip()
-            # Look for UCI move (4 chars like e2e4, or 5 with promotion like e7e8q)
-            if len(line) >= 4 and len(line) <= 5 and line[0:2].isalpha() and line[2:4].isdigit():
-                move = line
-                # Get thought from previous line if available
-                if i > 0:
-                    thought = lines[i-1].strip()
-                break
+        # Strategy: Assume format is "thought" then "move"
+        if len(lines) >= 2:
+            # Try last line as move, previous as thought
+            potential_move = lines[-1]
+            if len(potential_move) >= 4 and len(potential_move) <= 5:
+                if potential_move[0:2].isalpha() and potential_move[2:4].isdigit():
+                    move = potential_move
+                    thought = lines[-2] if len(lines) >= 2 else None
         
-        # Fallback: try to find move pattern anywhere in response
+        # Fallback: search for UCI move anywhere
+        if not move:
+            for i, line in enumerate(lines):
+                # Look for UCI move (4-5 chars like e2e4 or e7e8q)
+                if len(line) >= 4 and len(line) <= 5 and line[0:2].isalpha() and line[2:4].isdigit():
+                    move = line
+                    # Get thought from previous line if available
+                    if i > 0:
+                        thought = lines[i-1]
+                    break
+        
+        # Last resort: regex pattern search
         if not move:
             import re
             uci_pattern = r'\b([a-h][1-8][a-h][1-8][qrbn]?)\b'
@@ -514,8 +523,16 @@ Now play - remember: SHORT thought + UCI move!"""
             if match:
                 move = match.group(1)
         
+        # Default thought only if we really couldn't find one
+        if not thought and move:
+            # Try to extract any non-move line as thought
+            for line in lines:
+                if line != move and len(line) > 4:
+                    thought = line
+                    break
+        
         if not thought:
-            thought = "Analyzing position"
+            thought = "Calculating next move"
         
         if move:
             print(f"💭 Claude thinks: '{thought[:50]}'")  # Truncate long thoughts
@@ -648,23 +665,32 @@ Now play - remember: SHORT thought + UCI move!"""
         )
         response_text = response.choices[0].message.content.strip()
         
-        # Parse: look for UCI move in any line (more robust parsing)
-        lines = response_text.split('\n')
+        # Parse: look for UCI move and extract thought
+        lines = [line.strip() for line in response_text.split('\n') if line.strip()]
         thought = None
         move = None
         
-        # Try to find thought and move
-        for i, line in enumerate(lines):
-            line = line.strip()
-            # Look for UCI move (4 chars like e2e4, or 5 with promotion like e7e8q)
-            if len(line) >= 4 and len(line) <= 5 and line[0:2].isalpha() and line[2:4].isdigit():
-                move = line
-                # Get thought from previous line if available
-                if i > 0:
-                    thought = lines[i-1].strip()
-                break
+        # Strategy: Assume format is "thought" then "move"
+        if len(lines) >= 2:
+            # Try last line as move, previous as thought
+            potential_move = lines[-1]
+            if len(potential_move) >= 4 and len(potential_move) <= 5:
+                if potential_move[0:2].isalpha() and potential_move[2:4].isdigit():
+                    move = potential_move
+                    thought = lines[-2] if len(lines) >= 2 else None
         
-        # Fallback: try to find move pattern anywhere in response
+        # Fallback: search for UCI move anywhere
+        if not move:
+            for i, line in enumerate(lines):
+                # Look for UCI move (4-5 chars like e2e4 or e7e8q)
+                if len(line) >= 4 and len(line) <= 5 and line[0:2].isalpha() and line[2:4].isdigit():
+                    move = line
+                    # Get thought from previous line if available
+                    if i > 0:
+                        thought = lines[i-1]
+                    break
+        
+        # Last resort: regex pattern search
         if not move:
             import re
             uci_pattern = r'\b([a-h][1-8][a-h][1-8][qrbn]?)\b'
@@ -672,8 +698,16 @@ Now play - remember: SHORT thought + UCI move!"""
             if match:
                 move = match.group(1)
         
+        # Default thought only if we really couldn't find one
+        if not thought and move:
+            # Try to extract any non-move line as thought
+            for line in lines:
+                if line != move and len(line) > 4:
+                    thought = line
+                    break
+        
         if not thought:
-            thought = "Analyzing position"
+            thought = "Calculating next move"
         
         if move:
             print(f"💭 GPT thinks: '{thought[:50]}'")  # Truncate long thoughts
